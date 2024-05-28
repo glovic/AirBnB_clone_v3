@@ -80,24 +80,34 @@ class DBStorage:
     def close(self):
         """Dispose of current session if active"""
         self.__session.remove()
-
+        
     def get(self, cls, id):
-        """Retrieve an object"""
-        if cls is not None and type(cls) is str and id is not None and\
-           type(id) is str and cls in name2class:
-            cls = name2class[cls]
-            result = self.__session.query(cls).filter(cls.id == id).first()
-            return result
-        else:
-            return None
-
+        """
+        Retrieving object based on ID and class
+        Args:
+            cls (class): object retrieving class
+            id (str): object retrieving ID
+        Returns:
+            The object instance
+        """
+        if cls and id:
+            try:
+                obj = self.__session.query(cls).filter_by(id=id).first()
+                return obj
+            except:
+                return None
+        return None
+    
     def count(self, cls=None):
-        """Count number of objects in storage"""
-        total = 0
-        if isinstance(cls, str) and cls in name2class:
-            cls = name2class[cls]
-            total = self.__session.query(cls).count()
-        elif cls is None:
-            for cls in name2class.values():
-                total += self.__session.query(cls).count()
-        return total
+        """
+        Count of number of storage objects
+        Args:
+            cls (class): class counting instances
+        Returns:
+            objects number storage to match given class,
+            or return total count
+        """
+        if cls:
+            return self.__session.query(cls).count()
+        else:
+            return sum(self.__session.query(c).count() for c in classes.values())
